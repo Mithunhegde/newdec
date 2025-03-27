@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ArrowUpTrayIcon, MagnifyingGlassIcon, DocumentIcon } from '@heroicons/react/24/outline';
 import { SearchResult } from './types';
-import { uploadFile, searchFiles } from './lib/ipfs';
+import { uploadFile, searchFiles } from './lib/ipfs-client';
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);

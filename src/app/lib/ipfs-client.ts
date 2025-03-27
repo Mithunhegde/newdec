@@ -1,20 +1,27 @@
-import { create } from 'ipfs-http-client';
+import { create, IPFSHTTPClient } from 'ipfs-http-client';
 import { FileMetadata } from '../types';
 
-// Initialize IPFS client
-const ipfs = create({
-  host: 'ipfs.infura.io',
-  port: 5001,
-  protocol: 'https',
-  headers: {
-    authorization: `Basic ${Buffer.from(
-      `${process.env.NEXT_PUBLIC_INFURA_PROJECT_ID}:${process.env.NEXT_PUBLIC_INFURA_PROJECT_SECRET}`
-    ).toString('base64')}`,
-  },
-});
+let ipfs: IPFSHTTPClient | null = null;
+
+const getIpfsClient = async () => {
+  if (!ipfs) {
+    ipfs = create({
+      host: 'ipfs.infura.io',
+      port: 5001,
+      protocol: 'https',
+      headers: {
+        authorization: `Basic ${Buffer.from(
+          `${process.env.NEXT_PUBLIC_INFURA_PROJECT_ID}:${process.env.NEXT_PUBLIC_INFURA_PROJECT_SECRET}`
+        ).toString('base64')}`,
+      },
+    });
+  }
+  return ipfs;
+};
 
 export const uploadFile = async (file: File): Promise<FileMetadata> => {
   try {
+    const ipfs = await getIpfsClient();
     // Add file to IPFS
     const result = await ipfs.add(file);
     
@@ -41,6 +48,7 @@ export const uploadFile = async (file: File): Promise<FileMetadata> => {
 
 export const retrieveFile = async (cid: string): Promise<Uint8Array> => {
   try {
+    const ipfs = await getIpfsClient();
     const chunks = [];
     for await (const chunk of ipfs.cat(cid)) {
       chunks.push(chunk);
