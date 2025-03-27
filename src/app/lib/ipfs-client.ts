@@ -1,10 +1,15 @@
-import { create, IPFSHTTPClient } from 'ipfs-http-client';
+import { isBrowser } from '../utils/isBrowser';
 import { FileMetadata } from '../types';
 
-let ipfs: IPFSHTTPClient | null = null;
+let ipfs: any = null;
 
 const getIpfsClient = async () => {
+  if (!isBrowser) {
+    throw new Error('IPFS client can only be used in the browser');
+  }
+
   if (!ipfs) {
+    const { create } = await import('ipfs-http-client');
     ipfs = create({
       host: 'ipfs.infura.io',
       port: 5001,
@@ -20,6 +25,10 @@ const getIpfsClient = async () => {
 };
 
 export const uploadFile = async (file: File): Promise<FileMetadata> => {
+  if (!isBrowser) {
+    throw new Error('File upload can only be performed in the browser');
+  }
+
   try {
     const ipfs = await getIpfsClient();
     // Add file to IPFS
@@ -47,6 +56,10 @@ export const uploadFile = async (file: File): Promise<FileMetadata> => {
 };
 
 export const retrieveFile = async (cid: string): Promise<Uint8Array> => {
+  if (!isBrowser) {
+    throw new Error('File retrieval can only be performed in the browser');
+  }
+
   try {
     const ipfs = await getIpfsClient();
     const chunks = [];
@@ -61,6 +74,10 @@ export const retrieveFile = async (cid: string): Promise<Uint8Array> => {
 };
 
 export const searchFiles = async (query: string): Promise<FileMetadata[]> => {
+  if (!isBrowser) {
+    throw new Error('File search can only be performed in the browser');
+  }
+
   try {
     // TODO: Implement proper search functionality
     // For now, we'll just log the query and return empty results

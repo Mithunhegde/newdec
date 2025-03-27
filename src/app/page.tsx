@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ArrowUpTrayIcon, MagnifyingGlassIcon, DocumentIcon } from '@heroicons/react/24/outline';
 import { SearchResult } from './types';
-import { uploadFile, searchFiles } from './lib/ipfs-client';
+import { isBrowser } from './utils/isBrowser';
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
@@ -21,11 +21,12 @@ export default function Home() {
   };
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (!file || !isBrowser) return;
     
     setUploading(true);
     setError(null);
     try {
+      const { uploadFile } = await import('./lib/ipfs-client');
       const metadata = await uploadFile(file);
       const searchResult: SearchResult = {
         name: metadata.name,
@@ -45,10 +46,11 @@ export default function Home() {
   };
 
   const handleSearch = async () => {
-    if (!searchQuery) return;
+    if (!searchQuery || !isBrowser) return;
     
     setError(null);
     try {
+      const { searchFiles } = await import('./lib/ipfs-client');
       const results = await searchFiles(searchQuery);
       const searchResults: SearchResult[] = results.map(result => ({
         name: result.name,
@@ -88,7 +90,7 @@ export default function Home() {
           </div>
           <button
             onClick={handleUpload}
-            disabled={!file || uploading}
+            disabled={!file || uploading || !isBrowser}
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
           >
             {uploading ? 'Uploading...' : 'Upload'}
@@ -111,7 +113,8 @@ export default function Home() {
           </div>
           <button
             onClick={handleSearch}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            disabled={!isBrowser}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
           >
             <MagnifyingGlassIcon className="h-5 w-5 mr-2" />
             Search
