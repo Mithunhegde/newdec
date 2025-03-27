@@ -1,7 +1,8 @@
 import { isBrowser } from '../utils/isBrowser';
 import { FileMetadata } from '../types';
+import type { IPFSHTTPClient } from 'ipfs-http-client';
 
-let ipfs: any = null;
+let ipfs: IPFSHTTPClient | null = null;
 
 const getIpfsClient = async () => {
   if (!isBrowser) {
