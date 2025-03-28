@@ -32,8 +32,18 @@ export const uploadFile = async (file: File): Promise<FileMetadata> => {
 
   try {
     const ipfs = await getIpfsClient();
+    
+    // Convert File to ArrayBuffer
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
     // Add file to IPFS
-    const result = await ipfs.add(file);
+    const result = await ipfs.add(buffer, {
+      pin: true,
+      cidVersion: 0,
+    });
+    
+    console.log('File uploaded successfully. CID:', result.path);
     
     // Create metadata
     const metadata: FileMetadata = {
@@ -47,12 +57,18 @@ export const uploadFile = async (file: File): Promise<FileMetadata> => {
     };
 
     // Store metadata in IPFS
-    await ipfs.add(Buffer.from(JSON.stringify(metadata)));
+    const metadataBuffer = Buffer.from(JSON.stringify(metadata));
+    const metadataResult = await ipfs.add(metadataBuffer, {
+      pin: true,
+      cidVersion: 0,
+    });
+    
+    console.log('Metadata uploaded successfully. CID:', metadataResult.path);
 
     return metadata;
   } catch (error) {
     console.error('Error uploading file to IPFS:', error);
-    throw error;
+    throw new Error(`Failed to upload file: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 };
 

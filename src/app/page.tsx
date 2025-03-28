@@ -11,12 +11,14 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
       setError(null);
+      setUploadProgress(0);
     }
   };
 
@@ -25,9 +27,15 @@ export default function Home() {
     
     setUploading(true);
     setError(null);
+    setUploadProgress(0);
+    
     try {
       const { uploadFile } = await import('./lib/ipfs-client');
+      setUploadProgress(20); // Starting upload
+      
       const metadata = await uploadFile(file);
+      setUploadProgress(80); // File uploaded
+      
       const searchResult: SearchResult = {
         name: metadata.name,
         cid: metadata.cid,
@@ -35,11 +43,17 @@ export default function Home() {
         type: metadata.type,
         uploadedAt: metadata.uploadedAt,
       };
+      
       setSearchResults([searchResult]);
       setFile(null);
+      setUploadProgress(100); // Complete
+      
+      // Reset progress after a delay
+      setTimeout(() => setUploadProgress(0), 1000);
     } catch (error) {
       console.error('Upload failed:', error);
-      setError('Failed to upload file. Please try again.');
+      setError(error instanceof Error ? error.message : 'Failed to upload file. Please try again.');
+      setUploadProgress(0);
     } finally {
       setUploading(false);
     }
@@ -85,9 +99,21 @@ export default function Home() {
                 type="file"
                 className="opacity-0"
                 onChange={handleFileUpload}
+                disabled={uploading}
               />
             </label>
           </div>
+          
+          {/* Upload Progress */}
+          {uploadProgress > 0 && (
+            <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div
+                className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              ></div>
+            </div>
+          )}
+          
           <button
             onClick={handleUpload}
             disabled={!file || uploading || !isBrowser}
